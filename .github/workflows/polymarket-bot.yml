@@ -34,6 +34,7 @@ jobs:
         run: |
           git config user.name "polymarket-bot[bot]"
           git config user.email "polymarket-bot@github-actions"
+          git pull --rebase
           git add polymarket-bot/state.json
           git diff --staged --quiet || git commit -m "chore: update bot state [skip ci]"
           git push
