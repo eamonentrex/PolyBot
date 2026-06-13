@@ -1,0 +1,39 @@
+name: Polymarket Copy Bot
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch:           # manual trigger from GitHub UI
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write           # needed to commit updated state.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: polymarket-bot/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r polymarket-bot/requirements.txt
+
+      - name: Run bot
+        env:
+          POLYMARKET_PRIVATE_KEY: ${{ secrets.POLYMARKET_PRIVATE_KEY }}
+        run: python polymarket-bot/main.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "polymarket-bot[bot]"
+          git config user.email "polymarket-bot@github-actions"
+          git add polymarket-bot/state.json
+          git diff --staged --quiet || git commit -m "chore: update bot state [skip ci]"
+          git push
